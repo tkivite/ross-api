@@ -1,0 +1,30 @@
+{
+  "name": "aws-apis",
+  "version": "1.0.0",
+  "description": "aws apis",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tkivite/rossapis.git"
+  },
+  "keywords": [
+    "api",
+    "lambda",
+    "aws"
+  ],
+  "author": "Titus Kivite",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/tkivite/rossapis/issues"
+  },
+  "homepage": "https://github.com/tkivite/rossapis#readme",
+  "dependencies": {
+    "https": "^1.0.0",
+    "mysql2": "^2.3.3"
+  },
+  "devDependencies": {
+    "serverless-offline": "^8.3.1"
+  }
+}
