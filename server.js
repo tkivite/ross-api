@@ -6,6 +6,7 @@ const accountService = require("./server/services/account");
 const nftSeriesService = require("./server/services/nftseries");
 const nftService = require("./server/services/nft");
 const logService = require("./server/services/log");
+const authService = require("./server/services/auth");
 
 module.exports.createAccount = async (event) => {
   return await accountService.createAccount(event);
