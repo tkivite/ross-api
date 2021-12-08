@@ -1,4 +1,7 @@
 "use strict";
+require("dotenv").config({
+  path: "./setup.env",
+});
 const accountService = require("./server/services/account");
 const nftSeriesService = require("./server/services/nftseries");
 const nftService = require("./server/services/nft");
