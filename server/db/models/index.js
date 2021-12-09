@@ -7,27 +7,23 @@ const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 //const config = require(__dirname + '/../config/config.json')[env];
 const db = {};
-console.log(process.env);
+
 let sequelize;
 
 let db_options =  {
 "host":  process.env.DB_HOST,
+"port":  process.env.DB_PORT,
 "dialect": process.env.DB_DIALECT,
 "logging": true,
 "multipleStatements": true,
 "pool": {
-  "max": 20,
-  "min": 0,
-  "acquire": 30000,
-  "idle": 10000
-},
-"dialectOptions": {
-  "useUTC": false,
-  "dateStrings": true,
-  "typeCast": true
-},
-"timezone": "+03:00"
+  "max": 20
 }
+}
+console.log(process.env.DB_NAME);
+console.log(process.env.DB_USERNAME);
+console.log(process.env.DB_PASSWORD);
+console.log(db_options);
 sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USERNAME, process.env.DB_PASSWORD, db_options)
 
 

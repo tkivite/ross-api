@@ -2,28 +2,36 @@
 const db = require("./server/db/models");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
-exports.handler = function (event, context, callback) {
-  console.log(event);  
-  var token = checkUser(event.authorizationToken);
-  switch (token) {
-    case "allow":
-      callback(null, generatePolicy("user", "Allow", event.methodArn));
-      break;
-    case "deny":
-      callback(null, generatePolicy("user", "Deny", event.methodArn));
-      break;
-    case "unauthorized":
-      callback("Unauthorized"); // Return a 401 Unauthorized response
-      break;
-    default:
-      callback("Error: Invalid token"); // Return a 500 Invalid token response
-  }
+exports.authorize = function (event, context, callback) {
+ 
+  if(!event.authorizationToken){
+    callback("Unauthorized");
+  }  
+ db.ApiUser.findOne({
+    where: {
+      apiKey: {
+        [Op.eq]: event.authorizationToken,
+      },
+    },
+  }).then(apiUser=>{
+    
+    if(apiUser)
+    {
+        callback(null, generatePolicy("user", "Allow", event.methodArn));
+    }
+    else{
+        callback(null, generatePolicy("user", "Deny", event.methodArn));
+    }
+
+  }).catch((err) => {
+    callback(null, generatePolicy("user", "Deny", event.methodArn));
+  });
+  
 };
 
 // Help function to generate an IAM policy
 var generatePolicy = function (principalId, effect, resource) {
   var authResponse = {};
-
   authResponse.principalId = principalId;
   if (effect && resource) {
     var policyDocument = {};
@@ -50,16 +58,28 @@ var checkUser = function (token) {
   if(!token){
     return "unauthorized";
   }  
-  const apiUser = await db.ApiUser.findOne({
+ db.ApiUser.findOne({
     where: {
       apiKey: {
         [Op.eq]: token,
       },
     },
+  }).then(apiUser=>{
+    console.log(apiUser);
+   // let apiUser = apiUser.toJSON();
+     //     amountPledged = pledge.amountPledged;
+    if(apiUser)
+    {
+        return "allow";
+    }
+    else{
+        return "deny";
+    }
+
+  }).catch((err) => {
+    console.log(err);
+    return "deny";
   });
-  if (apiUser) {
-    return "allow";
-  }
   return "deny";
   
 };

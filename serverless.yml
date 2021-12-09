@@ -65,6 +65,8 @@ functions:
 
   auth:
     handler: auth.authorize
+    memorySize: 512 # optional, in MB, default is 1024
+    timeout: 15
     
 
   createAccount:
