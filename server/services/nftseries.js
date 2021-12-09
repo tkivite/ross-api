@@ -1,14 +1,63 @@
+const db = require("../db/models");
+const Sequelize = require("sequelize");
+const Op = Sequelize.Op;
 async function createNftSeries(request) {
-  return {
-    statusCode: 200,
-    body: JSON.stringify(
-      {
-        message: "NFT does not exist",
-      },
-      null,
-      2
-    ),
-  };
+  console.log(request);
+  const { operation, tags, args } = JSON.parse(request.body);
+  try {
+    const nftseries = await db.RequestLog.create({
+      operation: operation,
+      tags: tags,
+      args: args,
+      status: "new",
+    });
+
+    if (nftseries) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify(
+          {
+            operation: "create_nft_series_out",
+            success: true,
+            args: {
+              token_id: 1234,
+            },
+          },
+          null,
+          2
+        ),
+      };
+    } else {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            operation: "create_nft_series_out",
+            success: false,
+            args: {
+              token_id: "none",
+            },
+          },
+          null,
+          2
+        ),
+      };
+    }
+  } catch (err) {
+    console.log(err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify(
+        {
+          operation: "create_nft_series_out",
+          success: false,
+          error: err,
+        },
+        null,
+        2
+      ),
+    };
+  }
 }
 
 async function viewNextNftInSeries(request) {
@@ -16,8 +65,11 @@ async function viewNextNftInSeries(request) {
     statusCode: 200,
     body: JSON.stringify(
       {
-        message: "next NFT found",
-        token_id: 125,
+        operation: "create_nft_series_out",
+        success: true,
+        args: {
+          token_id: 1234,
+        },
       },
       null,
       2
