@@ -1,38 +1,62 @@
-// const db = require("../db/models");
-// const Sequelize = require("sequelize");
-// const Op = Sequelize.Op;
+const db = require("../db/models");
+const Sequelize = require("sequelize");
+const Op = Sequelize.Op;
 async function createAccount(request) {
-  //console.log(request);
-  // const apiUser = await db.ApiUser.findOne({
-  //   where: {
-  //     apiKey: {
-  //       [Op.eq]: request.authorizationToken,
-  //     },
-  //   },
-  // });
-  // if (apiUser) {
+  const { operation, tags, args } = JSON.parse(request.body);
+  try {
+    const account = await db.RequestLog.create({
+      operation: operation,
+      tags: tags,
+      args: args,
+      status: "new",
+    });
+
+    if (account) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify(
+          {
+            operation: "create_wallet_out",
+            success: true,
+            args: {
+              new_account_id: "my-account.testnet",
+            },
+          },
+          null,
+          2
+        ),
+      };
+    } else {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            operation: "create_wallet_out",
+            success: false,
+            args: {
+              new_account_id: "none",
+            },
+          },
+          null,
+          2
+        ),
+      };
+    }
+  } catch (err) {
+    console.log(err);
     return {
-      statusCode: 200,
+      statusCode: 500,
       body: JSON.stringify(
         {
-          message: "Account created",
+          operation: "create_wallet_out",
+          success: false,
+          error: err,
         },
         null,
         2
       ),
     };
-//   } else {
-//     return {
-//       statusCode: 403,
-//       body: JSON.stringify(
-//         {
-//           message: "No user found",
-//         },
-//         null,
-//         2
-//       ),
-//     };
-//   }
+  }
 }
 
 module.exports = {

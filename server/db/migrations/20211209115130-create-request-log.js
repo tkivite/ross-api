@@ -21,7 +21,7 @@ module.exports = {
         type: Sequelize.JSON
       },
       status: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,        
       },
       createdAt: {
         allowNull: false,
