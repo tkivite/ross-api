@@ -24,7 +24,7 @@ provider:
   name: aws
   runtime: nodejs12.x
   lambdaHashingVersion: 20201221
-  profile: titus
+  # profile: titus
   stage: dev
   region: us-east-2
   # memorySize: 128
@@ -62,6 +62,11 @@ provider:
 #    - include-me-dir/**
 
 functions:
+
+  auth:
+    handler: auth.authorize
+    
+
   createAccount:
     handler: server.createAccount
     events:
