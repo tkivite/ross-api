@@ -2,10 +2,12 @@ const db = require("../db/models");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 async function sendNft(request) {
-  console.log(request);
-  const { operation, tags, args } = JSON.parse(request.body);
+  const requestId = request.requestContext.requestId;
+  const { app_user_hash, operation, tags, args } = JSON.parse(request.body);
   try {
     const nft = await db.RequestLog.create({
+      requestId: requestId,
+      appUserHash: app_user_hash,
       operation: operation,
       tags: tags,
       args: args,
@@ -18,7 +20,7 @@ async function sendNft(request) {
         body: JSON.stringify(
           {
             operation: "transfer_nft_out",
-            success: true
+            success: true,
           },
           null,
           2
@@ -30,7 +32,7 @@ async function sendNft(request) {
         body: JSON.stringify(
           {
             operation: "transfer_nft_out",
-            success: false
+            success: false,
           },
           null,
           2

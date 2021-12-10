@@ -2,10 +2,12 @@ const db = require("../db/models");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 async function createNftSeries(request) {
-  console.log(request);
-  const { operation, tags, args } = JSON.parse(request.body);
+  const requestId = request.requestContext.requestId;
+  const { app_user_hash, operation, tags, args } = JSON.parse(request.body);
   try {
     const nftseries = await db.RequestLog.create({
+      requestId: requestId,
+      appUserHash: app_user_hash,
       operation: operation,
       tags: tags,
       args: args,

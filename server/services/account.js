@@ -2,9 +2,11 @@ const db = require("../db/models");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 async function createAccount(request) {
+  const requestId = request.requestContext.requestId;
   const { operation, tags, args } = JSON.parse(request.body);
   try {
     const account = await db.RequestLog.create({
+      requestId: requestId,
       operation: operation,
       tags: tags,
       args: args,
@@ -20,6 +22,7 @@ async function createAccount(request) {
             success: true,
             args: {
               new_account_id: "my-account.testnet",
+              app_user_hash: "sdfgiunp0ewrgipubsdfg"
             },
           },
           null,

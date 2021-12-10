@@ -11,6 +11,12 @@ module.exports = {
       operation: {
         type: Sequelize.STRING
       },
+      requestId: {
+        type: Sequelize.STRING
+      },
+      appUserHash: {
+        type: Sequelize.STRING
+      },
       apiUser: {
         type: Sequelize.INTEGER
       },

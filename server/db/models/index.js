@@ -20,10 +20,6 @@ let db_options =  {
   "max": 20
 }
 }
-console.log(process.env.DB_NAME);
-console.log(process.env.DB_USERNAME);
-console.log(process.env.DB_PASSWORD);
-console.log(db_options);
 sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USERNAME, process.env.DB_PASSWORD, db_options)
 
 

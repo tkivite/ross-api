@@ -17,6 +17,8 @@ module.exports = (sequelize, DataTypes) => {
   RequestLog.init({
     operation: DataTypes.STRING,
     apiUser:INTEGER,
+    appUserHash:DataTypes.STRING,
+    requestId:DataTypes.STRING,
     tags: DataTypes.JSON,
     args: DataTypes.JSON,
     status: DataTypes.STRING
