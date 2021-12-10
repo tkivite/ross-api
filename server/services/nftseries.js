@@ -4,7 +4,31 @@ const Op = Sequelize.Op;
 async function createNftSeries(request) {
   const requestId = request.requestContext.requestId;
   const { app_user_hash, operation, tags, args } = JSON.parse(request.body);
-  try {
+
+  const dummyEndpoint = "https://nearqueueserver.free.beeceptor.com/nftseries";
+  const endpoint = process.env.CREATE_NFT_SERIES || dummyEndpoint;
+  try {    
+    unirest
+      .post(endpoint)
+      .headers({
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      })
+      .send(
+        JSON.stringify({
+          requestId: requestId,
+          operation: operation,
+          app_user_hash: app_user_hash,
+          tags: tags,
+          args: args
+        })
+      )
+      .then((response) => {
+        console.log(response.body);
+      });
+
+    // Log request in database
+
     const nftseries = await db.RequestLog.create({
       requestId: requestId,
       appUserHash: app_user_hash,

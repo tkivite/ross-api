@@ -4,7 +4,33 @@ const Op = Sequelize.Op;
 async function sendNft(request) {
   const requestId = request.requestContext.requestId;
   const { app_user_hash, operation, tags, args } = JSON.parse(request.body);
-  try {
+  
+  // Forward request to Queue server
+
+  const dummyEndpoint = "https://nearqueueserver.free.beeceptor.com/nft";
+  const endpoint = process.env.TRANSFER_NTF_URL || dummyEndpoint;
+  try {    
+    unirest
+      .post(endpoint)
+      .headers({
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      })
+      .send(
+        JSON.stringify({
+          requestId: requestId,
+          operation: operation,
+          app_user_hash: app_user_hash,
+          tags: tags,
+          args: args
+        })
+      )
+      .then((response) => {
+        console.log(response.body);
+      });
+
+    // Log request in database
+
     const nft = await db.RequestLog.create({
       requestId: requestId,
       appUserHash: app_user_hash,
