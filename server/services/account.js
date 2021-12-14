@@ -4,11 +4,43 @@ const unirest = require("unirest");
 const Op = Sequelize.Op;
 async function createAccount(request) {
   const requestId = request.requestContext.requestId;
-  const { operation, tags, args } = JSON.parse(request.body);
-  const dummyEndpoint = "https://nearqueueserver.free.beeceptor.com";
-  const endpoint = process.env.CREATE_ACCOUNT_URL || dummyEndpoint;
-  try {    
-    unirest
+  try {
+    let body = JSON.parse(request.body);
+
+    // console.log(Object.keys(body));
+    let missingParamsArray = missingParams(body);
+    if (missingParamsArray.length > 0) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Missing Parameters: " + missingParamsArray.join(" "),
+          },
+          null,
+          2
+        ),
+      };
+    }
+    const { operation, tags, args } = body;
+    let missingtagsArray = missingTags(tags);
+    if (missingtagsArray.length > 0) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Missing Tags: " + missingtagsArray.join(" "),
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+    const endpoint = process.env.QUEUE_SERVER_URL;
+
+    const queueserver_response = await unirest
       .post(endpoint)
       .headers({
         Accept: "application/json",
@@ -19,52 +51,44 @@ async function createAccount(request) {
           requestId: requestId,
           operation: operation,
           tags: tags,
-          args: args
+          args: args,
         })
-      )
-      .then((response) => {
-        console.log(response.body);
+      );
+    if (queueserver_response) {
+      console.log(queueserver_response.body);
+      let { message, code } = queueserver_response.body;
+      db.RequestLog.create({
+        requestId: requestId,
+        operation: operation,
+        tags: tags,
+        args: args,
+        status: code,
       });
-
-    const account = await db.RequestLog.create({
-      requestId: requestId,
-      operation: operation,
-      tags: tags,
-      args: args,
-      status: "new",
-    });
-
-    if (account) {
-      return {
-        statusCode: 200,
-        body: JSON.stringify(
-          {
-            operation: "create_wallet_out",
-            success: true,
-            args: {
-              new_account_id: "my-account.testnet",
-              app_user_hash: "sdfgiunp0ewrgipubsdfg",
+      if (code == 0) {
+        return {
+          statusCode: 200,
+          body: JSON.stringify(
+            {
+              success: true,
+              message: "Message received",
             },
-          },
-          null,
-          2
-        ),
-      };
-    } else {
-      return {
-        statusCode: 400,
-        body: JSON.stringify(
-          {
-            operation: "create_wallet_out",
-            success: false,
-            args: {
-              new_account_id: "none",
+            null,
+            2
+          ),
+        };
+      } else {
+        return {
+          statusCode: 400,
+          body: JSON.stringify(
+            {
+              success: false,
+              message: "Problems sending message",
             },
-          },
-          null,
-          2
-        ),
-      };
+            null,
+            2
+          ),
+        };
+      }
     }
   } catch (err) {
     console.log(err);
@@ -72,15 +96,28 @@ async function createAccount(request) {
       statusCode: 500,
       body: JSON.stringify(
         {
-          operation: "create_wallet_out",
           success: false,
-          error: err,
+          error: err.message,
         },
         null,
         2
       ),
     };
   }
+}
+function missingParams(bodyParams) {
+  let arrayDiff = ["operation", "tags", "args"].filter(
+    (a) => !Object.keys(bodyParams).includes(a)
+  );
+  //  console.log(arrayDiff);
+  return arrayDiff;
+}
+
+function missingTags(tagObject) {
+  let arrayDiff = ["app_id", "action_id", "user_id"].filter(
+    (a) => !Object.keys(tagObject).includes(a)
+  );
+  return arrayDiff;
 }
 
 module.exports = {

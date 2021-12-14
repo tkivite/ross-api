@@ -1,14 +1,46 @@
 const db = require("../db/models");
 const Sequelize = require("sequelize");
+
+const unirest = require("unirest");
 const Op = Sequelize.Op;
 async function createNftSeries(request) {
   const requestId = request.requestContext.requestId;
-  const { app_user_hash, operation, tags, args } = JSON.parse(request.body);
+  try {
+    let body = JSON.parse(request.body);
 
-  const dummyEndpoint = "https://nearqueueserver.free.beeceptor.com/nftseries";
-  const endpoint = process.env.CREATE_NFT_SERIES || dummyEndpoint;
-  try {    
-    unirest
+    let missingParamsArray = missingParams(body);
+    if (missingParamsArray.length > 0) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Missing Parameters: " + missingParamsArray.join(" "),
+          },
+          null,
+          2
+        ),
+      };
+    }
+    const { app_user_hash, operation, tags, args } = body;
+    let missingtagsArray = missingTags(tags);
+    if (missingtagsArray.length > 0) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Missing Tags: " + missingtagsArray.join(" "),
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+    const endpoint = process.env.QUEUE_SERVER_URL;
+
+    const queueserver_response = await unirest
       .post(endpoint)
       .headers({
         Accept: "application/json",
@@ -20,54 +52,45 @@ async function createNftSeries(request) {
           operation: operation,
           app_user_hash: app_user_hash,
           tags: tags,
-          args: args
+          args: args,
         })
-      )
-      .then((response) => {
-        console.log(response.body);
+      );
+    if (queueserver_response) {
+      //console.log(queueserver_response);
+      let { message, code } = queueserver_response.body;
+      db.RequestLog.create({
+        requestId: requestId,
+        appUserHash: app_user_hash,
+        operation: operation,
+        tags: tags,
+        args: args,
+        status: code,
       });
-
-    // Log request in database
-
-    const nftseries = await db.RequestLog.create({
-      requestId: requestId,
-      appUserHash: app_user_hash,
-      operation: operation,
-      tags: tags,
-      args: args,
-      status: "new",
-    });
-
-    if (nftseries) {
-      return {
-        statusCode: 200,
-        body: JSON.stringify(
-          {
-            operation: "create_nft_series_out",
-            success: true,
-            args: {
-              token_id: 1234,
+      if (code == 0) {
+        return {
+          statusCode: 200,
+          body: JSON.stringify(
+            {
+              success: true,
+              message: "Message received",
             },
-          },
-          null,
-          2
-        ),
-      };
-    } else {
-      return {
-        statusCode: 400,
-        body: JSON.stringify(
-          {
-            operation: "create_nft_series_out",
-            success: false,
-            args: {
-              token_id: "none",
+            null,
+            2
+          ),
+        };
+      } else {
+        return {
+          statusCode: 400,
+          body: JSON.stringify(
+            {
+              success: false,
+              message: "Problems sending message",
             },
-          },
-          null,
-          2
-        ),
-      };
+            null,
+            2
+          ),
+        };
+      }
     }
   } catch (err) {
     console.log(err);
@@ -75,9 +98,8 @@ async function createNftSeries(request) {
       statusCode: 500,
       body: JSON.stringify(
         {
-          operation: "create_nft_series_out",
           success: false,
-          error: err,
+          message: err.message,
         },
         null,
         2
@@ -104,20 +126,125 @@ async function viewNextNftInSeries(request) {
 }
 
 async function claimtNftInSeries(request) {
-  return {
-    statusCode: 200,
-    body: JSON.stringify(
-      {
-        message: "Success",
-        total_minted: 125,
-        total_allowed: 125,
-        near_explorer_transaction_url: "",
-        hash: "",
-      },
-      null,
-      2
-    ),
-  };
+  const requestId = request.requestContext.requestId;
+  try {
+    let body = JSON.parse(request.body);
+
+    let missingParamsArray = missingParams(body);
+    if (missingParamsArray.length > 0) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Missing Parameters: " + missingParamsArray.join(" "),
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+    const { app_user_hash, operation, tags, args } = body;
+    let missingtagsArray = missingTags(tags);
+    if (missingtagsArray.length > 0) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Missing Tags: " + missingtagsArray.join(" "),
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+    // Forward request to Queue server
+
+    const endpoint = process.env.QUEUE_SERVER_URL;
+
+    const queueserver_response = await unirest
+      .post(endpoint)
+      .headers({
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      })
+      .send(
+        JSON.stringify({
+          requestId: requestId,
+          operation: operation,
+          app_user_hash: app_user_hash,
+          tags: tags,
+          args: args,
+        })
+      );
+    if (queueserver_response) {
+      // Log request in database
+
+      let { message, code } = queueserver_response.body;
+      db.RequestLog.create({
+        requestId: requestId,
+        appUserHash: app_user_hash,
+        operation: operation,
+        tags: tags,
+        args: args,
+        status: code,
+      });
+      if (code == 0) {
+        return {
+          statusCode: 200,
+          body: JSON.stringify(
+            {
+              success: true,
+              message: "Message received",
+            },
+            null,
+            2
+          ),
+        };
+      } else {
+        return {
+          statusCode: 400,
+          body: JSON.stringify(
+            {
+              success: false,
+              message: "Problems sending message",
+            },
+            null,
+            2
+          ),
+        };
+      }
+    }
+  } catch (err) {
+    console.log(err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify(
+        {
+          success: false,
+          message: err.message,
+        },
+        null,
+        2
+      ),
+    };
+  }
+}
+function missingParams(bodyParams) {
+  let arrayDiff = ["app_user_hash", "operation", "tags", "args"].filter(
+    (a) => !Object.keys(bodyParams).includes(a)
+  );
+  // console.log(arrayDiff);
+  return arrayDiff;
+}
+function missingTags(tagObject) {
+  let arrayDiff = ["app_id", "action_id", "user_id"].filter(
+    (a) => !Object.keys(tagObject).includes(a)
+  );
+  return arrayDiff;
 }
 
 module.exports = {

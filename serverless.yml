@@ -97,7 +97,7 @@ functions:
     handler: server.claimtNftInSeries
     events:
       - http:
-          path: nftseries/{id}
+          path: claimnft
           method: post
           cors: true  
           
@@ -115,7 +115,30 @@ functions:
       - http:
           path: log
           method: post
-          cors: true           
+          cors: true 
+  
+  qserverAuth:
+    handler: auth.qserverAuth
+    memorySize: 512 # optional, in MB, default is 1024
+    timeout: 15
+
+  fetch:
+    handler: qserver.fetchRequest
+    events:
+      - http:
+          path: request
+          method: get
+          cors: true
+
+  callback:
+    handler: qserver.callback
+    events:
+      - http:
+          path: callback
+          method: post
+          cors: true        
+  
+            
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
