@@ -5,9 +5,9 @@ const Op = Sequelize.Op;
 async function response(request) {
   //const requestId = request.requestContext.requestId;
   try {
-    const { requestId, success, operation, tags, args } = JSON.parse(
-      request.body
-    );
+    console.log(request.body);
+    const { id, success, operation, explorerUrl, app_id, tags, args } =
+      JSON.parse(request.body);
 
     //Perform Request to APP server
     const success_endpoint = process.env.APP_SERVER_SUCCESS_ENDPOINT;
@@ -23,9 +23,11 @@ async function response(request) {
       })
       .send(
         JSON.stringify({
-          requestId: requestId,
+          id: id,
           success: success,
           operation: operation,
+          explorerUrl: explorerUrl,
+          app_id: app_id,
           tags: tags,
           args: args,
         })
@@ -33,16 +35,16 @@ async function response(request) {
 
     if (appserver_response) {
       console.log(appserver_response.body);
-      let { message, code } = appserver_response.body;
+      let { success } = appserver_response.body;
       //console.log(code);
-      db.CallbackLog.create({
-        requestId: requestId,
-        operation: operation,
-        tags: tags,
-        args: args,
-        success: success,
-      });
-      if (code == 0) {
+      // db.CallbackLog.create({
+      //   requestId: requestId,
+      //   operation: operation,
+      //   tags: tags,
+      //   args: args,
+      //   success: success,
+      // });
+      if (success) {
         return {
           statusCode: 200,
           body: JSON.stringify(
@@ -55,6 +57,7 @@ async function response(request) {
           ),
         };
       } else {
+        console.log(appserver_response);
         return {
           statusCode: 400,
           body: JSON.stringify(

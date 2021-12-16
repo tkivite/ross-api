@@ -15,7 +15,7 @@ async function createNftSeries(request) {
         body: JSON.stringify(
           {
             success: false,
-            message: "Missing Parameters: " + missingParamsArray.join(" "),
+            message: "Missing Parameters: " + missingParamsArray.join(", "),
           },
           null,
           2
@@ -30,7 +30,36 @@ async function createNftSeries(request) {
         body: JSON.stringify(
           {
             success: false,
-            message: "Missing Tags: " + missingtagsArray.join(" "),
+            message: "Missing Tags: " + missingtagsArray.join(", "),
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+    let missingArgsArray = missingCreateArgs(args);
+    if (missingArgsArray.length > 0) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Missing Args: " + missingArgsArray.join(", "),
+          },
+          null,
+          2
+        ),
+      };
+    }
+    let missingMetdata = missingMetaDataArgs(args.token_metadata);
+    if (missingMetdata.length > 0) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Missing Token Metadata: " + missingMetdata.join(", "),
           },
           null,
           2
@@ -48,7 +77,7 @@ async function createNftSeries(request) {
       })
       .send(
         JSON.stringify({
-          requestId: requestId,
+          id: requestId,
           operation: operation,
           app_user_hash: app_user_hash,
           tags: tags,
@@ -58,19 +87,20 @@ async function createNftSeries(request) {
     if (queueserver_response) {
       //console.log(queueserver_response);
       let { message, code } = queueserver_response.body;
-      db.RequestLog.create({
-        requestId: requestId,
-        appUserHash: app_user_hash,
-        operation: operation,
-        tags: tags,
-        args: args,
-        status: code,
-      });
+      // db.RequestLog.create({
+      //   requestId: requestId,
+      //   appUserHash: app_user_hash,
+      //   operation: operation,
+      //   tags: tags,
+      //   args: args,
+      //   status: code,
+      // });
       if (code == 0) {
         return {
           statusCode: 200,
           body: JSON.stringify(
             {
+              id: requestId,
               success: true,
               message: "Message received",
             },
@@ -137,7 +167,7 @@ async function claimtNftInSeries(request) {
         body: JSON.stringify(
           {
             success: false,
-            message: "Missing Parameters: " + missingParamsArray.join(" "),
+            message: "Missing Parameters: " + missingParamsArray.join(", "),
           },
           null,
           2
@@ -153,7 +183,22 @@ async function claimtNftInSeries(request) {
         body: JSON.stringify(
           {
             success: false,
-            message: "Missing Tags: " + missingtagsArray.join(" "),
+            message: "Missing Tags: " + missingtagsArray.join(", "),
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+    let missingArgsArray = missingClaimArgs(args);
+    if (missingArgsArray.length > 0) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Missing Args: " + missingArgsArray.join(", "),
           },
           null,
           2
@@ -173,7 +218,7 @@ async function claimtNftInSeries(request) {
       })
       .send(
         JSON.stringify({
-          requestId: requestId,
+          id: requestId,
           operation: operation,
           app_user_hash: app_user_hash,
           tags: tags,
@@ -184,19 +229,20 @@ async function claimtNftInSeries(request) {
       // Log request in database
 
       let { message, code } = queueserver_response.body;
-      db.RequestLog.create({
-        requestId: requestId,
-        appUserHash: app_user_hash,
-        operation: operation,
-        tags: tags,
-        args: args,
-        status: code,
-      });
+      // db.RequestLog.create({
+      //   requestId: requestId,
+      //   appUserHash: app_user_hash,
+      //   operation: operation,
+      //   tags: tags,
+      //   args: args,
+      //   status: code,
+      // });
       if (code == 0) {
         return {
           statusCode: 200,
           body: JSON.stringify(
             {
+              id: requestId,
               success: true,
               message: "Message received",
             },
@@ -246,6 +292,26 @@ function missingTags(tagObject) {
   );
   return arrayDiff;
 }
+
+function missingCreateArgs(argObject) {
+  let arrayDiff = ["creator_id", "token_metadata"].filter(
+    (a) => !Object.keys(argObject).includes(a)
+  );
+  return arrayDiff;
+}
+function missingMetaDataArgs(metaObject) {
+  let arrayDiff = ["title", "description","media", "reference","copies"].filter(
+    (a) => !Object.keys(metaObject).includes(a)
+  );
+  return arrayDiff;
+}
+function missingClaimArgs(argsObject) {
+  let arrayDiff = ["token_id", "sender_id","receiver_id"].filter(
+    (a) => !Object.keys(argsObject).includes(a)
+  );
+  return arrayDiff;
+}
+
 
 module.exports = {
   createNftSeries: createNftSeries,

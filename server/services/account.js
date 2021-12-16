@@ -2,12 +2,13 @@ const db = require("../db/models");
 const Sequelize = require("sequelize");
 const unirest = require("unirest");
 const Op = Sequelize.Op;
+const nearAPI = require("near-api-js");
 async function createAccount(request) {
   const requestId = request.requestContext.requestId;
   try {
     let body = JSON.parse(request.body);
 
-    // console.log(Object.keys(body));
+    // request validations
     let missingParamsArray = missingParams(body);
     if (missingParamsArray.length > 0) {
       return {
@@ -38,7 +39,54 @@ async function createAccount(request) {
       };
     }
 
+    let missingArgsArray = missingArgs(args);
+    if (missingArgsArray.length > 0) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Missing Args: " + missingArgsArray.join(", "),
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+    //validate account wallet name
+    args.new_account_id = validWalletName(args.new_account_id);
+    if (!nameLengthIsOk(args.new_account_id)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "wallet name too short/long",
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+    const walletNameTaken = await walletNameIsTaken(args.new_account_id);
+    if (walletNameTaken) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "wallet name taken",
+          },
+          null,
+          2
+        ),
+      };
+    }
     const endpoint = process.env.QUEUE_SERVER_URL;
+
+    // send request to queue server
 
     const queueserver_response = await unirest
       .post(endpoint)
@@ -48,7 +96,7 @@ async function createAccount(request) {
       })
       .send(
         JSON.stringify({
-          requestId: requestId,
+          id: requestId,
           operation: operation,
           tags: tags,
           args: args,
@@ -56,19 +104,13 @@ async function createAccount(request) {
       );
     if (queueserver_response) {
       console.log(queueserver_response.body);
-      let { message, code } = queueserver_response.body;
-      db.RequestLog.create({
-        requestId: requestId,
-        operation: operation,
-        tags: tags,
-        args: args,
-        status: code,
-      });
+      let { message, code } = queueserver_response.body;  
       if (code == 0) {
         return {
           statusCode: 200,
           body: JSON.stringify(
             {
+              id: requestId,
               success: true,
               message: "Message received",
             },
@@ -105,6 +147,7 @@ async function createAccount(request) {
     };
   }
 }
+
 function missingParams(bodyParams) {
   let arrayDiff = ["operation", "tags", "args"].filter(
     (a) => !Object.keys(bodyParams).includes(a)
@@ -120,6 +163,54 @@ function missingTags(tagObject) {
   return arrayDiff;
 }
 
+function missingArgs(argObject) {
+  let arrayDiff = ["new_account_id", "email", "phone"].filter(
+    (a) => !Object.keys(argObject).includes(a)
+  );
+  // check if either email or phone exits
+  arrayDiff =
+    arrayDiff.length == 1 &&
+    (arrayDiff[0] == "phone" || arrayDiff[0] == "email")
+      ? []
+      : arrayDiff;
+  return arrayDiff;
+}
+
+async function walletNameIsTaken(name) {
+  const { connect } = nearAPI;
+
+  const config = {
+    networkId: "mainnet",
+    keyStore: "123", // optional if not signing transactions
+    nodeUrl: "https://rpc.mainnet.near.org",
+    walletUrl: "https://wallet.mainnet.near.org",
+    helperUrl: "https://helper.mainnet.near.org",
+    explorerUrl: "https://explorer.mainnet.near.org",
+  };
+  const near = await connect(config);
+  // test if account exists
+  try {
+    const senderAccount = await near.account(name);
+    const userExists = !!(await senderAccount.state());
+    if (userExists) return true;
+    else return false;
+  } catch (e) {
+    return false;
+  }
+
+  //return
+}
+
+function validWalletName(name) {
+  return name
+    .toLowerCase()
+    .replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, "");
+  //allowed regEX
+  // /^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$/.test(name)
+}
+function nameLengthIsOk(name) {
+  return name.length > 2 && name.length < 64;
+}
 module.exports = {
   createAccount: createAccount,
 };

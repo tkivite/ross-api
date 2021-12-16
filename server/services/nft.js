@@ -61,14 +61,14 @@ async function sendNft(request) {
       // Log request in database
 
       let { message, code } = queueserver_response.body;
-      db.RequestLog.create({
-        requestId: requestId,
-        appUserHash: app_user_hash,
-        operation: operation,
-        tags: tags,
-        args: args,
-        status: code,
-      });
+      // db.RequestLog.create({
+      //   requestId: requestId,
+      //   appUserHash: app_user_hash,
+      //   operation: operation,
+      //   tags: tags,
+      //   args: args,
+      //   status: code,
+      // });
       if (code == 0) {
         return {
           statusCode: 200,
