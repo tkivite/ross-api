@@ -1,4 +1,4 @@
-const db = require("../db/models");
+//const db = require("../db/models");
 const Sequelize = require("sequelize");
 
 const unirest = require("unirest");

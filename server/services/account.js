@@ -1,4 +1,4 @@
-const db = require("../db/models");
+//const db = require("../db/models");
 const Sequelize = require("sequelize");
 const unirest = require("unirest");
 const Op = Sequelize.Op;
@@ -55,7 +55,42 @@ async function createAccount(request) {
     }
 
     //validate account wallet name
-    args.new_account_id = validWalletName(args.new_account_id);
+    //has valid suffix
+    if (!correctSuffix(args.new_account_id)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Error, does not end with .near or .testnet",
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+    let i = args.new_account_id.lastIndexOf(".");
+    let name =  args.new_account_id.substring(0, i);
+    let suffix = args.new_account_id.substring(i);
+
+    if (!correctSuffix(args.new_account_id)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Error, does not end with .near or .testnet",
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+    //
+    //Error, does not end with .near or .testnet
+    args.new_account_id = validWalletName(name) + suffix;
     if (!nameLengthIsOk(args.new_account_id)) {
       return {
         statusCode: 400,
@@ -111,6 +146,7 @@ async function createAccount(request) {
           body: JSON.stringify(
             {
               id: requestId,
+              account: args.new_account_id,
               success: true,
               message: "Message received",
             },
@@ -199,6 +235,10 @@ async function walletNameIsTaken(name) {
   }
 
   //return
+}
+
+function correctSuffix(name){
+  return name.endsWith(".testnet") || name.endsWith(".near");
 }
 
 function validWalletName(name) {
