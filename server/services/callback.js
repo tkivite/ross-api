@@ -1,7 +1,4 @@
-//const db = require("../db/models");
-const Sequelize = require("sequelize");
 const unirest = require("unirest");
-const Op = Sequelize.Op;
 async function response(request) {
   //const requestId = request.requestContext.requestId;
   try {

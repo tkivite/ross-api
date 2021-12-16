@@ -1,8 +1,4 @@
-//const db = require("../db/models");
-const Sequelize = require("sequelize");
-
 const unirest = require("unirest");
-const Op = Sequelize.Op;
 async function createNftSeries(request) {
   const requestId = request.requestContext.requestId;
   try {
@@ -300,18 +296,21 @@ function missingCreateArgs(argObject) {
   return arrayDiff;
 }
 function missingMetaDataArgs(metaObject) {
-  let arrayDiff = ["title", "description","media", "reference","copies"].filter(
-    (a) => !Object.keys(metaObject).includes(a)
-  );
+  let arrayDiff = [
+    "title",
+    "description",
+    "media",
+    "reference",
+    "copies",
+  ].filter((a) => !Object.keys(metaObject).includes(a));
   return arrayDiff;
 }
 function missingClaimArgs(argsObject) {
-  let arrayDiff = ["token_id", "sender_id","receiver_id"].filter(
+  let arrayDiff = ["token_id", "sender_id", "receiver_id"].filter(
     (a) => !Object.keys(argsObject).includes(a)
   );
   return arrayDiff;
 }
-
 
 module.exports = {
   createNftSeries: createNftSeries,

@@ -1,7 +1,4 @@
-//const db = require("../db/models");
-const Sequelize = require("sequelize");
 const unirest = require("unirest");
-const Op = Sequelize.Op;
 const nearAPI = require("near-api-js");
 async function createAccount(request) {
   const requestId = request.requestContext.requestId;
@@ -71,7 +68,7 @@ async function createAccount(request) {
     }
 
     let i = args.new_account_id.lastIndexOf(".");
-    let name =  args.new_account_id.substring(0, i);
+    let name = args.new_account_id.substring(0, i);
     let suffix = args.new_account_id.substring(i);
 
     if (!correctSuffix(args.new_account_id)) {
@@ -139,7 +136,7 @@ async function createAccount(request) {
       );
     if (queueserver_response) {
       console.log(queueserver_response.body);
-      let { message, code } = queueserver_response.body;  
+      let { message, code } = queueserver_response.body;
       if (code == 0) {
         return {
           statusCode: 200,
@@ -237,7 +234,7 @@ async function walletNameIsTaken(name) {
   //return
 }
 
-function correctSuffix(name){
+function correctSuffix(name) {
   return name.endsWith(".testnet") || name.endsWith(".near");
 }
 
