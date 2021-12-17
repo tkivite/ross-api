@@ -74,6 +74,13 @@ functions:
           path: account
           method: post
           cors: true
+  checkName:
+    handler: server.checkName
+    events:
+      - http:
+          path: checkname
+          method: post
+          cors: true
 
   createNftSeries:
     handler: server.createNftSeries

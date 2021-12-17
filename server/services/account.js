@@ -88,7 +88,7 @@ async function createAccount(request) {
     //
     //Error, does not end with .near or .testnet
     args.new_account_id = validWalletName(name) + suffix;
-    if (!nameLengthIsOk(args.new_account_id)) {
+    if (!nameLengthIsOk(name)) {
       return {
         statusCode: 400,
         body: JSON.stringify(
@@ -180,6 +180,91 @@ async function createAccount(request) {
     };
   }
 }
+async function checkName(request) {
+  const requestId = request.requestContext.requestId;
+  try {
+    let body = JSON.parse(request.body);
+    let { wallet_name } = body;
+
+    //validate account wallet name
+    //has valid suffix
+    if (!correctSuffix(wallet_name)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "Error, does not end with .near or .testnet",
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+    let i = wallet_name.lastIndexOf(".");
+    let name = wallet_name.substring(0, i);
+    let suffix = wallet_name.substring(i);
+
+    //
+    //Error, does not end with .near or .testnet
+    wallet_name = validWalletName(name) + suffix;
+    if (!nameLengthIsOk(name)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "wallet name too short/long",
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+    const walletNameTaken = await walletNameIsTaken(wallet_name);
+    if (walletNameTaken) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify(
+          {
+            success: false,
+            message: "wallet name taken",
+          },
+          null,
+          2
+        ),
+      };
+    }
+
+      return {
+        statusCode: 200,
+        body: JSON.stringify(
+          {
+            success: true,
+            wallet_name: wallet_name,
+          },
+          null,
+          2
+        ),
+      };
+    
+  } catch (err) {
+    console.log(err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify(
+        {
+          success: false,
+          error: err.message,
+        },
+        null,
+        2
+      ),
+    };
+  }
+}
 
 function missingParams(bodyParams) {
   let arrayDiff = ["operation", "tags", "args"].filter(
@@ -220,9 +305,10 @@ async function walletNameIsTaken(name) {
     helperUrl: "https://helper.mainnet.near.org",
     explorerUrl: "https://explorer.mainnet.near.org",
   };
-  const near = await connect(config);
+  
   // test if account exists
   try {
+    const near = await connect(config);
     const senderAccount = await near.account(name);
     const userExists = !!(await senderAccount.state());
     if (userExists) return true;
@@ -246,8 +332,9 @@ function validWalletName(name) {
   // /^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$/.test(name)
 }
 function nameLengthIsOk(name) {
-  return name.length > 2 && name.length < 64;
+  return name.length > 2 && name.length < 56;
 }
 module.exports = {
   createAccount: createAccount,
+  checkName: checkName,
 };

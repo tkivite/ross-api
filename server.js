@@ -26,3 +26,7 @@ module.exports.sendNft = async (event) => {
 module.exports.sendLog = async (event) => {
   return await logService.sendLog(event);
 };
+module.exports.checkName = async (event) => {
+  return await accountService.checkName(event);
+};
+
