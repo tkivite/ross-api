@@ -305,10 +305,9 @@ async function walletNameIsTaken(name) {
     helperUrl: "https://helper.mainnet.near.org",
     explorerUrl: "https://explorer.mainnet.near.org",
   };
-  
+  const near = await connect(config);
   // test if account exists
   try {
-    const near = await connect(config);
     const senderAccount = await near.account(name);
     const userExists = !!(await senderAccount.state());
     if (userExists) return true;
