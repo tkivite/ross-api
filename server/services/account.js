@@ -102,20 +102,20 @@ async function createAccount(request) {
       };
     }
 
-    const walletNameTaken = await walletNameIsTaken(args.new_account_id);
-    if (walletNameTaken) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify(
-          {
-            success: false,
-            message: "wallet name taken",
-          },
-          null,
-          2
-        ),
-      };
-    }
+    // const walletNameTaken = await walletNameIsTaken(args.new_account_id);
+    // if (walletNameTaken) {
+    //   return {
+    //     statusCode: 400,
+    //     body: JSON.stringify(
+    //       {
+    //         success: false,
+    //         message: "wallet name taken",
+    //       },
+    //       null,
+    //       2
+    //     ),
+    //   };
+    // }
     const endpoint = process.env.QUEUE_SERVER_URL;
 
     // send request to queue server
@@ -295,6 +295,7 @@ function missingArgs(argObject) {
 }
 
 async function walletNameIsTaken(name) {
+  //return false;
   const { connect } = nearAPI;
 
   const config = {
