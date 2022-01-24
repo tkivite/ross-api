@@ -34,6 +34,7 @@ async function createNftSeries(request) {
       };
     }
 
+    let transaction_id = tags.transaction_id;
     let missingArgsArray = missingCreateArgs(args);
     if (missingArgsArray.length > 0) {
       return {
@@ -74,6 +75,7 @@ async function createNftSeries(request) {
       .send(
         JSON.stringify({
           id: requestId,
+
           operation: operation,
           app_user_hash: app_user_hash,
           tags: tags,
@@ -97,6 +99,7 @@ async function createNftSeries(request) {
           body: JSON.stringify(
             {
               id: requestId,
+              transaction_id: transaction_id,
               success: true,
               message: "Message received",
             },
@@ -187,6 +190,7 @@ async function claimtNftInSeries(request) {
       };
     }
 
+    let transaction_id = tags.transaction_id;
     let missingArgsArray = missingClaimArgs(args);
     if (missingArgsArray.length > 0) {
       return {
@@ -239,6 +243,7 @@ async function claimtNftInSeries(request) {
           body: JSON.stringify(
             {
               id: requestId,
+              transaction_id: transaction_id,
               success: true,
               message: "Message received",
             },
@@ -283,7 +288,7 @@ function missingParams(bodyParams) {
   return arrayDiff;
 }
 function missingTags(tagObject) {
-  let arrayDiff = ["app_id", "action_id", "user_id"].filter(
+  let arrayDiff = ["app_id", "action_id", "user_id", "transaction_id"].filter(
     (a) => !Object.keys(tagObject).includes(a)
   );
   return arrayDiff;

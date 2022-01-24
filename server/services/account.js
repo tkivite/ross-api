@@ -35,7 +35,7 @@ async function createAccount(request) {
         ),
       };
     }
-
+    let transaction_id = tags.transaction_id;
     let missingArgsArray = missingArgs(args);
     if (missingArgsArray.length > 0) {
       return {
@@ -143,6 +143,7 @@ async function createAccount(request) {
           body: JSON.stringify(
             {
               id: requestId,
+              transaction_id: transaction_id,
               account: args.new_account_id,
               success: true,
               message: "Message received",
@@ -238,18 +239,17 @@ async function checkName(request) {
       };
     }
 
-      return {
-        statusCode: 200,
-        body: JSON.stringify(
-          {
-            success: true,
-            wallet_name: wallet_name,
-          },
-          null,
-          2
-        ),
-      };
-    
+    return {
+      statusCode: 200,
+      body: JSON.stringify(
+        {
+          success: true,
+          wallet_name: wallet_name,
+        },
+        null,
+        2
+      ),
+    };
   } catch (err) {
     console.log(err);
     return {
@@ -275,7 +275,7 @@ function missingParams(bodyParams) {
 }
 
 function missingTags(tagObject) {
-  let arrayDiff = ["app_id", "action_id", "user_id"].filter(
+  let arrayDiff = ["app_id", "action_id", "user_id", "transaction_id"].filter(
     (a) => !Object.keys(tagObject).includes(a)
   );
   return arrayDiff;

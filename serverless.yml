@@ -24,9 +24,9 @@ provider:
   name: aws
   runtime: nodejs12.x
   lambdaHashingVersion: 20201221
-  # profile: titus
+  profile: near
   stage: dev
-  region: us-east-2
+  region: us-east-1
   # memorySize: 128
 
 # you can overwrite defaults here

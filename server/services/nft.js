@@ -20,6 +20,8 @@ async function sendNft(request) {
     }
 
     const { app_user_hash, operation, tags, args } = body;
+
+    let transaction_id = tags.transaction_id;
     let missingtagsArray = missingTags(tags);
     if (missingtagsArray.length > 0) {
       return {
@@ -71,6 +73,7 @@ async function sendNft(request) {
           statusCode: 200,
           body: JSON.stringify(
             {
+              transaction_id: transaction_id,
               success: true,
               message: "Message received",
             },
@@ -120,7 +123,7 @@ function missingParams(bodyParams) {
   return arrayDiff;
 }
 function missingTags(tagObject) {
-  let arrayDiff = ["app_id", "action_id", "user_id"].filter(
+  let arrayDiff = ["app_id", "action_id", "user_id", "transaction_id"].filter(
     (a) => !Object.keys(tagObject).includes(a)
   );
   return arrayDiff;
